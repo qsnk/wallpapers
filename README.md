@@ -1,6 +1,7 @@
 # Wallpapers App 
 ## Description
 Simple app for changing wallpapers
+
 ## Config file
 Example:
 ```TXT
