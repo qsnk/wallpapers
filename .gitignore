@@ -1,0 +1,9 @@
+_*
+__*
+.idea/
+.vscode/
+.DS_Store
+build/
+images/
+compile_flags.txt
+config.ini
