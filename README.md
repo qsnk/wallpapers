@@ -9,9 +9,8 @@ strategy = 3
 type = 2
 interval = 1
 source = C:\path\to\images (Windows style) | /users/user/path/to/images (Unix style)
+```
 
-```
-```
 Fields description:
 | name | description |
 |---|---|
