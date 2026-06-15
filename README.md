@@ -7,11 +7,30 @@ Simple terminal app for changing wallpapers
 1. Download the MinGW tools and cmake
 2. Add this tools to your PATH variable
 3. Go to build directory
-4. Run this commands
+4. Run this commands:
 ```BASH
 cmake .. -G "MinGW Makefiles"
 cmake --build . -- -j4
 ```
+
+Run app in terminal:
+```BASH
+.\build\wallpapers.exe
+```
+
+Create windows scheduled task:
+```BASH
+.\build\wallpapers.exe -t
+```
+
+For better user experience you should do this steps:
+1. Navigate to task scheduler
+2. Find task named "Wallpaper changing"
+3. Double click on it
+4. In the "General" tab – Set "run with highest privileges" to checked
+5. In the "Actions" tab – Double click on executable, then in the section "Working directory" paste full path to folder with your "config.ini" file.
+
+
 ### Unix like
 Soon...
 
