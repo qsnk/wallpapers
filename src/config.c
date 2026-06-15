@@ -34,29 +34,30 @@ Config *read_config(Config *cfg) {
         char *value = trim(eq + 1);
         if (!*param) continue;
 
-        if (strcmp(param, "strategy")  == 0) {
-            if (strcmp(value, "1")      == 1) cfg->strategy = STATIC;
-            else if (strcmp(value, "2") == 2) cfg->strategy = ROUND_ROBIN;
-            else if (strcmp(value, "3") == 3) cfg->strategy = RANDOM;
+        if (strcmp(param, "strategy")   == 0) {
+            if (strcmp(value, "1")      == 0) cfg->strategy = STATIC;
+            else if (strcmp(value, "2") == 0) cfg->strategy = ROUND_ROBIN;
+            else if (strcmp(value, "3") == 0) cfg->strategy = RANDOM;
             else {}
         } else if (strcmp(param, "type")  == 0) {
-            if (strcmp(value, "1")      == 0) cfg->type = MINUTE;
-            else if (strcmp(value, "2")      == 0) cfg->type = HOURLY;
-            else if (strcmp(value, "3") == 0) cfg->type = DAILY;
-            else if (strcmp(value, "4") == 0) cfg->type = WEEKLY;
-            else if (strcmp(value, "5") == 0) cfg->type = MONTHLY;
+            if (strcmp(value, "1")        == 0) cfg->type = MINUTE;
+            else if (strcmp(value, "2")   == 0) cfg->type = HOURLY;
+            else if (strcmp(value, "3")   == 0) cfg->type = DAILY;
+            else if (strcmp(value, "4")   == 0) cfg->type = WEEKLY;
+            else if (strcmp(value, "5")   == 0) cfg->type = MONTHLY;
             else {}
         } else if (strcmp(param, "interval") == 0) {
             cfg->interval = (int)strtol(value, NULL, 10);
         } else if (strcmp(param, "source")     == 0) { 
             snprintf(cfg->source, sizeof(cfg->source), "%s", value);
+        } else if (strcmp(param, "exe_path")     == 0) { 
+            snprintf(cfg->exe_path, sizeof(cfg->exe_path), "%s", value);
         } else continue;
     }
 
     fclose(f);
     return cfg;
 }
-
 
 int write_config(Config *cfg) {
     FILE *f = fopen("config.ini", "w");
@@ -71,6 +72,16 @@ int write_config(Config *cfg) {
     fprintf(f, "type = %d\n", cfg->type);
     fprintf(f, "interval = %d\n", cfg->interval);
     fprintf(f, "source = \"%s\"\n", cfg->source);
+    fprintf(f, "exe_path = \"%s\"\n", cfg->exe_path);
     fclose(f);
     return 0;
+}
+
+int create_default_config(Config *cfg) {
+    cfg->strategy = RANDOM;
+    cfg->type = HOURLY;
+    cfg->interval = 1;
+    snprintf(cfg->source, sizeof(cfg->source), "");
+    snprintf(cfg->exe_path, sizeof(cfg->exe_path), "");
+    return write_config(cfg);
 }

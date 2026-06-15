@@ -1,6 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <windows.h>
@@ -8,74 +6,46 @@
 
 #include "version.h"
 #include "config.h"
-
-
-#if defined (__linux__)
-    #define PLATFORM "Linux"
-#elif defined (_WIN32)
-    #define PLATFORM "Windows"
-#elif defined (MACOSX)
-    #define PLATFORM "MacOS"
-#else
-    #define PLATFORM "Other"
-#endif
-
-
-char *select_random_image(Config *cfg, char *image_path, size_t image_path_size) {
-    time_t timestamp = time(NULL); 
-    srand(timestamp);
-    
-    DIR *dir = opendir(cfg->source);
-
-    if (!dir) {
-        fprintf(stderr, "Failed to read directory \"%s\"\n", image_path);
-        return NULL;
-    }
-    
-    struct dirent *ent;
-    int files_size = 0;
-    
-    while ((ent = readdir(dir)) != NULL ) {
-        if (ent->d_name[0] == '.') continue;
-        files_size++;
-
-        if (rand() % files_size == 0) {
-            snprintf(image_path, image_path_size, cfg->source[strlen(cfg->source) - 1] != '\\' ? "%s\\%s" : "%s%s", cfg->source, ent->d_name);
-        }
-    }
-
-    closedir(dir);
-    return image_path;
-}
+#include "tasks.h"
+#include "files.h"
 
 
 int main(int argc, char *argv[]) {
     int opt;
+    int task = 0;
+    Config cfg = {0};
     
-    while((opt = getopt(argc, argv, "hv")) != -1) {
+    while((opt = getopt(argc, argv, "hvt")) != -1) {
         switch (opt) {
             case 'h': printf("Wallpapers - utility for changing your wallpapers\nusage: wallpapers [-h] [-v]\n"); return 0;
             case 'v': { 
                 char version[32];
                 printf("%s", read_version(version, sizeof(version)) ? version : "Unknown");
             }
+            case 't': {
+                task = 1;
+                break;
+            }
             return 0;
             break;
         }
     }
-
-    Config cfg = {0};
     
     if (!read_config(&cfg)) {
         printf("[DEBUG] main.c -> Failed to read config. Creating default file \"config.ini\"\n");
-        cfg.strategy = RANDOM;
-        cfg.type = HOURLY;
-        cfg.interval = 1;
-        strcpy(cfg.source, "");
-        if (write_config(&cfg) != 0) return 1;
+        if (create_default_config(&cfg) != 0) {
+            fprintf(stderr, "Failed to create default config file\n");
+            return 1;
+        }
         printf("[DEBUG] main.c -> Successfully created \"config.ini\"\n");
     }
 
+    if (task != 0) {
+        printf("[DEBUG] main.c -> Setting up windows scheduler task\n");
+        create_windows_scheduler_task("Wallpapers changing", cfg.exe_path, NULL, NULL, &cfg);
+        return 0;
+    }
+    
     if (cfg.source[0] == '\0') {
         printf("Enter path to images: ");
         fgets(cfg.source, sizeof(cfg.source), stdin);
@@ -84,8 +54,29 @@ int main(int argc, char *argv[]) {
     printf("[DEBUG] main.c -> Using \"%s\" as source\n", cfg.source);
 
     // Select image for background 
-    char image_path[4096];
-    select_random_image(&cfg, image_path, sizeof(image_path));
+    char image_path[MAX_PATH];
+    
+    int files_count = count_files_in_directory(cfg.source);
+    printf("[DEBUG] main.c -> Files count: %d\n", files_count);
+    
+    char *images[files_count];
+    read_images(&cfg, images);
+    
+    switch (cfg.strategy) {
+        case STATIC: {
+            printf("[DEBUG] main.c -> Selected \"static\" mode. Background image not changed\n"); 
+            return 0;
+        }
+        case ROUND_ROBIN: {
+            select_next_image(images, files_count, image_path, sizeof(image_path));
+            break;
+        }
+        case RANDOM: {
+            select_random_image(cfg.source, images, files_count, image_path, sizeof(image_path)); 
+            break;
+        }
+        default: return 0;
+    }
 
     printf("[DEBUG] main.c -> Using \"%s\" as background image\n", image_path);
 

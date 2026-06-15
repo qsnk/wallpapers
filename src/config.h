@@ -1,6 +1,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include <windows.h>
+
 typedef enum ChangeStrategy {
     STATIC      = 1,
     ROUND_ROBIN = 2,
@@ -19,11 +21,13 @@ typedef struct Config {
     int interval;
     ChangeStrategy strategy;
     ScheduleType type;
-    char source[4096];
+    char source[MAX_PATH];
+    char exe_path[MAX_PATH];
     
 } Config;
 
 Config *read_config(Config *cfg); 
 int write_config(Config *cfg);
+int create_default_config(Config *cfg);
 
 #endif

@@ -7,6 +7,9 @@ file(GLOB_RECURSE PROJECT_SOURCES "${CMAKE_SOURCE_DIR}/src/*.c")
 # Создаём исполняемый
 add_executable(wallpapers ${PROJECT_SOURCES})
 
+# Убираем консоль при запуске
+set_target_properties(wallpapers PROPERTIES WIN32_EXECUTABLE TRUE)
+
 # Стандарт C
 set_target_properties(wallpapers PROPERTIES
   C_STANDARD 11
